@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-950 text-gray-100 antialiased;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-gray-900/70 border border-gray-800 rounded-2xl backdrop-blur-sm;
+  }
+
+  .btn-primary {
+    @apply flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white
+           font-semibold px-4 py-2 rounded-xl transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300
+           hover:text-white font-medium px-4 py-2 rounded-xl border border-gray-700
+           hover:border-gray-600 transition-all duration-150;
+  }
+
+  .btn-ghost {
+    @apply flex items-center gap-1.5 text-gray-400 hover:text-white hover:bg-gray-800
+           px-3 py-1.5 rounded-lg transition-all duration-150 text-sm;
+  }
+
+  .input {
+    @apply w-full bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-2.5 text-white
+           placeholder-gray-600 text-sm focus:outline-none focus:ring-2
+           focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all;
+  }
+
+  .label {
+    @apply block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1.5;
+  }
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4b5563; }
