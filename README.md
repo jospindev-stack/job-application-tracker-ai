@@ -5,7 +5,8 @@
 ![CI](https://github.com/jospindev-stack/job-application-tracker-ai/actions/workflows/ci.yml/badge.svg)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
-![MongoDB](https://img.shields.io/badge/MongoDB-Motor-47A248?logo=mongodb)
+![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248?logo=mongodb)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
 ![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-orange)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -18,7 +19,7 @@ Job Application Tracker AI is a full-stack web application designed to simplify 
 
 The application allows users to organize job applications, monitor their progress, analyze job descriptions, identify missing skills, receive resume improvement suggestions, and generate tailored interview preparation.
 
-The project combines a React frontend with a FastAPI backend, MongoDB persistence, Groq-powered AI features, automated backend tests, and continuous integration with GitHub Actions.
+The project combines a React frontend, FastAPI backend, MongoDB persistence, Groq-powered AI features, automated backend tests, Docker-based local orchestration, and continuous integration with GitHub Actions.
 
 ---
 
@@ -28,11 +29,13 @@ The project combines a React frontend with a FastAPI backend, MongoDB persistenc
 | --- | --- |
 | Frontend | React 18 + Vite |
 | Backend | FastAPI |
-| Database | MongoDB Atlas / Motor |
+| Database | MongoDB 7 / Motor |
 | AI | Groq (Llama 3.3 70B) |
 | Styling | Tailwind CSS |
 | Charts | Recharts |
 | Validation | Pydantic |
+| Containerization | Docker + Docker Compose |
+| Web Server / Proxy | Nginx |
 | Testing | pytest, pytest-asyncio, pytest-cov |
 | CI | GitHub Actions |
 | API Documentation | OpenAPI / Swagger |
@@ -50,7 +53,8 @@ The project combines a React frontend with a FastAPI backend, MongoDB persistenc
 | Analytics Dashboard | Monitor response rate, interview rate, offer rate, application timeline, and status distribution |
 | Search & Filtering | Search applications by company or position and filter by status |
 | Automated Backend Tests | Validate API behavior, statistics, error handling, and AI routes without external API calls |
-| Continuous Integration | Run backend tests automatically on pushes and pull requests |
+| Dockerized Stack | Run frontend, backend, and MongoDB with one Compose command |
+| Continuous Integration | Run backend tests and validate Docker builds on GitHub Actions |
 
 ---
 
@@ -62,8 +66,12 @@ job-application-tracker-ai/
 |-- .github/
 |   `-- workflows/
 |       `-- ci.yml
+|-- .dockerignore
+|-- .env.example
+|-- docker-compose.yml
 |
 |-- backend/
+|   |-- Dockerfile
 |   |-- requirements.txt
 |   |-- requirements-dev.txt
 |   |-- app/
@@ -83,6 +91,8 @@ job-application-tracker-ai/
 |       `-- test_ai.py
 |
 `-- frontend/
+    |-- Dockerfile
+    |-- nginx.conf
     |-- package.json
     |-- vite.config.js
     `-- src/
@@ -103,58 +113,100 @@ job-application-tracker-ai/
 ## Architecture
 
 ```text
-React Application
-        |
-        v
-FastAPI REST API
-        |
-        +---------------+
-        |               |
-        v               v
-MongoDB Atlas      Groq API
+Browser
+  |
+  v
+Nginx / React frontend :8080
+  |
+  | /api
+  v
+FastAPI backend :8000
+  |
+  +--------------------+
+  |                    |
+  v                    v
+MongoDB 7          Groq API
 ```
+
+The frontend uses relative `/api` requests. In the Docker stack, Nginx serves the React build and proxies `/api` traffic to the FastAPI container.
 
 ---
 
-## AI Workflow
+## Quick Start with Docker
 
-```text
-Job application or job description
-        |
-        v
-FastAPI request validation
-        |
-        v
-Prompt sent to Groq
-        |
-        v
-Structured AI response
-        |
-        v
-Frontend displays:
-- Match score
-- CV improvement suggestions
-- ATS keywords
-- Interview preparation
-```
+### Prerequisites
 
----
-
-## Prerequisites
-
-- Python 3.11 or later
-- Node.js 18 or later
-- MongoDB Atlas account or local MongoDB instance
+- Docker Desktop or Docker Engine with Docker Compose
 - Groq API key
 
----
-
-## Installation
+Clone the repository:
 
 ```bash
 git clone https://github.com/jospindev-stack/job-application-tracker-ai.git
 cd job-application-tracker-ai
 ```
+
+Create the environment file:
+
+Linux / macOS:
+
+```bash
+cp .env.example .env
+```
+
+Windows:
+
+```powershell
+copy .env.example .env
+```
+
+Set your Groq API key in `.env`:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+Build and start the complete stack:
+
+```bash
+docker compose up --build
+```
+
+Application:
+
+```text
+http://localhost:8080
+```
+
+The Compose stack starts:
+
+- `frontend`: React production build served by Nginx on port `8080`
+- `backend`: FastAPI service on the internal Docker network on port `8000`
+- `mongo`: MongoDB 7 with a persistent `mongo-data` volume
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+Remove containers and the local MongoDB volume:
+
+```bash
+docker compose down -v
+```
+
+---
+
+## Local Development without Docker
+
+### Prerequisites
+
+- Python 3.11 or later
+- Node.js 18 or later
+- MongoDB Atlas account or local MongoDB instance
+- Groq API key
 
 ### Backend
 
@@ -190,28 +242,23 @@ GROQ_MODEL=llama-3.3-70b-versatile
 PORT=8000
 ```
 
-### Frontend
+Run the backend:
 
 ```bash
-cd ../frontend
-npm install
-```
-
----
-
-## Running the Project
-
-Backend:
-
-```bash
-cd backend
 uvicorn app.main:app --reload --port 8000
 ```
 
-Frontend:
+API documentation:
+
+```text
+http://localhost:8000/docs
+```
+
+### Frontend
 
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 
@@ -219,12 +266,6 @@ Frontend URL:
 
 ```text
 http://localhost:5173
-```
-
-API documentation:
-
-```text
-http://localhost:8000/docs
 ```
 
 ---
@@ -290,15 +331,22 @@ The current suite covers:
 
 ## Continuous Integration
 
-GitHub Actions runs the backend test suite automatically for pushes to `main`, test branches, and pull requests targeting `main`.
+GitHub Actions runs automatically for pushes to `main`, `test/**` and `chore/**` branches, as well as pull requests targeting `main`.
 
-The CI workflow uses Python 3.12 and executes:
+The workflow contains two validation jobs:
 
 ```text
-checkout -> install backend test dependencies -> run pytest with coverage
+backend-tests
+  -> install Python dependencies
+  -> run pytest with coverage
+
+docker-build
+  -> validate docker compose configuration
+  -> build backend image
+  -> build frontend image
 ```
 
-External MongoDB and Groq services are not required by the test job.
+The backend test job does not require live MongoDB or Groq services, while the Docker job verifies that the container configuration and application images build successfully before merge.
 
 ---
 
@@ -332,6 +380,7 @@ The application includes:
 - configurable CORS policy
 - server-side AI requests
 - structured API responses
+- container environment variables for runtime configuration
 
 ---
 
@@ -339,7 +388,7 @@ The application includes:
 
 | Variable | Description |
 | --- | --- |
-| `MONGODB_URL` | MongoDB connection string |
+| `MONGODB_URL` | MongoDB connection string; provided automatically by Compose for the backend container |
 | `GROQ_API_KEY` | Groq API key |
 | `GROQ_MODEL` | Groq model |
 | `PORT` | Backend server port |
@@ -348,30 +397,15 @@ The application includes:
 
 ## Deployment
 
-### Backend
+The application is container-ready. The backend image runs FastAPI with Uvicorn, and the frontend image uses a multi-stage Node build followed by Nginx for static serving and reverse proxying.
 
-Suitable for Railway, Render, or another Python hosting platform.
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
-```
-
-### Frontend
-
-Suitable for Vercel or Netlify.
+For local or compatible container hosting environments:
 
 ```bash
-cd frontend
-npm run build
+docker compose up --build
 ```
 
-Build output:
-
-```text
-frontend/dist
-```
-
-Configure `VITE_API_URL` to point to the deployed backend.
+The frontend can also be deployed independently to Vercel or Netlify, and the backend to a Python or container hosting platform.
 
 ---
 
@@ -385,9 +419,9 @@ Planned improvements include:
 - cover letter generation
 - email reminders
 - calendar integration
-- Docker support
 - frontend component tests
 - end-to-end tests
+- deployment automation
 
 ---
 
